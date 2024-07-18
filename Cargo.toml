@@ -1,0 +1,23 @@
+[package]
+name = "dock_door_plc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+plctag = "0.4"
+zerocopy = "0.7.32"
+anyhow = "1.0.82"
+tiberius = "0.12.2"
+serde_json = {version = "1.0.117", features = ["default"]}
+serde = {version = "1.0.203", features = ["derive"]}
+serde_with = {version = "3.8.1"}
+sqlx-oldapi = {version = "0.6.22", features = ["runtime-tokio-native-tls", "chrono", "mssql", "json", "decimal", "macros", "sqlx-macros"], default-features = false}
+derive_more = "0.99.18"
+futures = "0.3.30"
+tokio = {version = "1.37", features = ["full"]}
+tokio-util = { version = "0.7.1", features = ["compat"] }
+chrono = {version = "0.4.38", features = ["serde"]}
+dotenvy = "=0.15.7"
+rayon = "1.10.0"
