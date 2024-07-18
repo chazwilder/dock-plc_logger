@@ -4,6 +4,8 @@ use dotenvy::dotenv;
 use std::env;
 use chrono::Local;
 use crate::models::dock_door::DockSensor;
+use log::{error, warn, info, debug, trace};
+
 
 
 pub async fn get_connection() -> Option<Pool<Mssql>> {
@@ -11,7 +13,7 @@ pub async fn get_connection() -> Option<Pool<Mssql>> {
     let db_url = match env::var("MSSQL_URL") {
         Ok(url) => url,
         Err(e) => {
-            println!("Failed to get MSSQL_URL from environment: {}", e);
+            error!("Failed to get MSSQL_URL from environment: {}", e);
             return None;
         }
     };
@@ -22,11 +24,11 @@ pub async fn get_connection() -> Option<Pool<Mssql>> {
         .await
     {
         Ok(pool) => {
-            println!("Successfully connected to database");
+            info!("Successfully connected to database");
             Some(pool)
         }
         Err(e) => {
-            println!("Failed to connect to database: {}", e);
+            error!("Failed to connect to database: {}", e);
             None
         }
     }
@@ -51,7 +53,7 @@ pub fn save_to_mssql(sensor: &DockSensor) -> Result<(), anyhow::Error> {
             .execute(&pool)
             .await
             .expect("Failed to insert sensor data into database");
-        println!("{} | INFO: MSSQL -  {:?}", Local::now(), res);
+        info!("{} | INFO: MSSQL -  {:?}", Local::now(), res);
 
         Ok(())
     })

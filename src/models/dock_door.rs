@@ -6,6 +6,7 @@ use plctag::builder::*;
 use plctag::RawTag;
 use plctag::Status;
 use crate::services::db::save_to_mssql;
+use log::{error, warn, info, debug, trace};
 
 #[derive(Serialize, Deserialize, Debug, Clone, FromRow)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -90,14 +91,14 @@ impl DockSensor {
                     self.current_value = Some(new_value);
                     self.previous_dttm = self.update_dttm;
                     self.update_dttm = Some(Local::now().naive_local());
-                    println!("{} | INFO: Sensor {} on dock {} updated: {:?}", Local::now() , self.sensor, self.dock_name, new_value);
+                    info!("{} | INFO: Sensor {} on dock {} updated: {:?}", Local::now() , self.sensor, self.dock_name, new_value);
                     save_to_mssql(self)?;
-                    println!("{} | INFO: Sensor {} on dock {} updated: {:?} - SAVED TO MSSQL", Local::now() , self.sensor, self.dock_name, new_value);
+                    info!("{} | INFO: Sensor {} on dock {} updated: {:?} - SAVED TO MSSQL", Local::now() , self.sensor, self.dock_name, new_value);
 
                 }
             }
             _ => {
-                println!("Failed to read sensor {} on dock {}: {:?}", self.sensor, self.dock_name, status);
+                error!("Failed to read sensor {} on dock {}: {:?}", self.sensor, self.dock_name, status);
             }
         }
         Ok(())
