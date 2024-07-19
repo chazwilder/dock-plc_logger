@@ -19,7 +19,7 @@ pub async fn get_connection() -> Option<Pool<Mssql>> {
     };
 
     match MssqlPoolOptions::new()
-        .max_connections(100)
+        .max_connections(30)
         .connect(&db_url)
         .await
     {
@@ -52,7 +52,10 @@ pub fn save_to_mssql(sensor: &DockSensor) -> Result<(), anyhow::Error> {
             .bind(sensor.previous_dttm)
             .execute(&pool)
             .await
-            .expect("Failed to insert sensor data into database");
+            .map_err(|e| {
+            error!("Failed to insert sensor data into database: {}", e);
+            anyhow::anyhow!("Database error: {}", e)
+        })?;
         info!("{} | INFO: MSSQL -  {:?}", Local::now(), res);
 
         Ok(())

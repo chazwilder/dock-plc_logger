@@ -11,16 +11,18 @@ use log4rs;
 use log::{error, warn, info, debug, trace};
 
 fn main() -> Result<(), Box<Error>> {
-    log4rs::init_file("C:\\Users\\cwilder\\Desktop\\dev\\TPT\\dock-plc_logger\\log4rs.yaml", Default::default()).unwrap();
+    log4rs::init_file("C:\\Users\\cwilder\\RustroverProjects\\dock-door-service\\log4rs.yaml", Default::default()).unwrap();
     let runtime = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-    let mut sensors = runtime.block_on(load_config())?;
-    poll_sensors(&mut sensors)?;
-
+    let sensors = runtime.block_on(load_config())?;
+    match poll_sensors(sensors){
+        Ok(_) => info!("Polling completed successfully"),
+        Err(e) => error!("Error during polling: {}", e),
+    }
     Ok(())
 }
 
 
-pub fn poll_sensors(sensors: &mut [DockSensor]) -> Result<Vec<DockSensor>, anyhow::Error> {
+pub fn poll_sensors(mut sensors: Vec<DockSensor>) -> Result<(), anyhow::Error> {
     let poll_interval = Duration::from_secs(15); // Adjust as needed
 
     loop {

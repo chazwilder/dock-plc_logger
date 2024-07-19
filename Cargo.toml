@@ -9,7 +9,6 @@ edition = "2021"
 plctag = "0.4"
 zerocopy = "0.7.32"
 anyhow = "1.0.82"
-tiberius = "0.12.2"
 serde_json = {version = "1.0.117", features = ["default"]}
 serde = {version = "1.0.203", features = ["derive"]}
 serde_with = {version = "3.8.1"}

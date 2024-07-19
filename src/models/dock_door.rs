@@ -44,6 +44,7 @@ pub struct DockSensor {
     pub door_state: Option<String>,
     #[sqlx(rename = "PANEL_STATE")]
     pub panel_state: Option<String>,
+    pub initialized: bool,
 }
 
 impl Default for DockSensor {
@@ -59,6 +60,7 @@ impl Default for DockSensor {
             previous_value: None,
             door_state: None,
             panel_state: None,
+            initialized: false,
         }
     }
 }
@@ -86,21 +88,37 @@ impl DockSensor {
                 let new_value = tag.get_u8(0)
                     .expect("Failed to get value");
 
-                if self.current_value.map_or(true, |current| current != new_value) {
-                    self.previous_value = self.current_value;
-                    self.current_value = Some(new_value);
-                    self.previous_dttm = self.update_dttm;
-                    self.update_dttm = Some(Local::now().naive_local());
-                    info!("{} | INFO: Sensor {} on dock {} updated: {:?}", Local::now() , self.sensor, self.dock_name, new_value);
-                    save_to_mssql(self)?;
-                    info!("{} | INFO: Sensor {} on dock {} updated: {:?} - SAVED TO MSSQL", Local::now() , self.sensor, self.dock_name, new_value);
-
+                if !self.initialized {
+                    self.initialize(new_value)?;
+                } else if self.current_value.map_or(true, |current| current != new_value) {
+                    self.update_value(new_value)?;
                 }
+                ///////////////////////////////////////////////////////
             }
             _ => {
                 error!("Failed to read sensor {} on dock {}: {:?}", self.sensor, self.dock_name, status);
             }
         }
+        Ok(())
+    }
+    pub fn initialize(&mut self, value: u8) -> Result<(), anyhow::Error> {
+        let now = Local::now().naive_local();
+        self.current_value = Some(value);
+        self.update_dttm = Some(now);
+        self.initialized = true;
+        info!("{} | INFO: Sensor {} on dock {} initialized with value: {:?}", now, self.sensor, self.dock_name, value);
+        save_to_mssql(self)?;
+        Ok(())
+    }
+    pub fn update_value(&mut self, new_value: u8) -> Result<(), anyhow::Error> {
+        let now = Local::now().naive_local();
+        self.previous_value = self.current_value;
+        self.current_value = Some(new_value);
+        self.previous_dttm = self.update_dttm;
+        self.update_dttm = Some(now);
+        info!("{} | INFO: Sensor {} on dock {} updated: {:?}", now, self.sensor, self.dock_name, new_value);
+        save_to_mssql(self)?;
+        info!("{} | INFO: Sensor {} on dock {} update saved to MSSQL", now, self.sensor, self.dock_name);
         Ok(())
     }
 }
@@ -112,6 +130,7 @@ impl From<DockSensorPartial> for DockSensor {
             dock_ip: partial.dock_ip,
             sensor: partial.sensor,
             address: partial.address,
+            initialized: false,
             ..Default::default()
         }
     }
